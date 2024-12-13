@@ -1,4 +1,11 @@
-use std::{ffi::c_void, process::ExitCode, ptr::NonNull};
+use std::{
+    cmp::Ordering,
+    ffi::c_void,
+    hash::{Hash, Hasher},
+    process::ExitCode,
+    ptr::NonNull,
+    rc::Rc,
+};
 use windows::{
     core::{w, HSTRING, PCWSTR},
     Win32::{
@@ -12,8 +19,8 @@ use windows::{
             },
         },
         UI::WindowsAndMessaging::{
-            CreateWindowExW, DefWindowProcW, DispatchMessageW, GetClassInfoExW, GetMessageW,
-            GetWindowLongPtrW, LoadCursorW, LoadImageW, MessageBoxW, PostQuitMessage,
+            CreateWindowExW, DefWindowProcW, DestroyWindow, DispatchMessageW, GetClassInfoExW,
+            GetMessageW, GetWindowLongPtrW, LoadCursorW, LoadImageW, MessageBoxW, PostQuitMessage,
             RegisterClassExW, SetWindowLongPtrW, CREATESTRUCTW, CW_USEDEFAULT, HICON, HMENU,
             IDC_ARROW, IDI_APPLICATION, IMAGE_ICON, LR_DEFAULTCOLOR, LR_DEFAULTSIZE, LR_SHARED,
             MB_OK, MESSAGEBOX_RESULT, MSG, WINDOW_EX_STYLE, WINDOW_LONG_PTR_INDEX, WINDOW_STYLE,
@@ -31,34 +38,55 @@ pub struct WindowEvent {
     pub lparam: LPARAM,
 }
 
-type WindowEventHandler = Box<dyn Fn(NonNull<Window>, WindowEvent) -> LRESULT>;
+pub type WindowEvents = Rc<dyn Fn(NonNull<Window>, WindowEvent) -> LRESULT>;
 
 pub struct Window {
     pub class: WNDCLASSEXW,
     pub hwnd: HWND,
-    pub events: Option<WindowEventHandler>,
+    pub events: Option<WindowEvents>,
+    pub id: usize,
 }
 
 impl Window {
-    pub fn new(events: Option<WindowEventHandler>) -> Self {
-        Self {
-            class: WNDCLASSEXW {
-                cbSize: u32::try_from(std::mem::size_of::<WNDCLASSEXW>()).unwrap(),
-                style: WNDCLASS_STYLES::default(),
-                lpfnWndProc: Some(Self::wnd_proc),
-                cbClsExtra: 0,
-                cbWndExtra: i32::try_from(std::mem::size_of::<Self>()).unwrap(),
-                hInstance: get_instance().into(),
-                hCursor: unsafe { LoadCursorW(None, IDC_ARROW).unwrap() },
-                hbrBackground: unsafe { HBRUSH(GetStockObject(BLACK_BRUSH).0) },
-                lpszMenuName: PCWSTR::null(),
-                lpszClassName: w!("Window"),
-                hIcon: load_icon(),
-                hIconSm: load_icon(),
-            },
+    pub fn new(
+        title: &str,
+        visible: bool,
+        id: Option<usize>,
+        events: Option<&WindowEvents>,
+    ) -> Box<Self> {
+        let class = WNDCLASSEXW {
+            cbSize: u32::try_from(std::mem::size_of::<WNDCLASSEXW>()).unwrap(),
+            style: WNDCLASS_STYLES::default(),
+            lpfnWndProc: Some(Self::wnd_proc),
+            cbClsExtra: 0,
+            cbWndExtra: i32::try_from(std::mem::size_of::<Self>()).unwrap(),
+            hInstance: module_handle().into(),
+            hCursor: unsafe { LoadCursorW(None, IDC_ARROW).unwrap() },
+            hbrBackground: unsafe { HBRUSH(GetStockObject(BLACK_BRUSH).0) },
+            lpszMenuName: PCWSTR::null(),
+            lpszClassName: w!("Window"),
+            hIcon: Self::load_icon(),
+            hIconSm: Self::load_icon(),
+        };
+
+        let mut window = Box::new(Self {
+            class: class,
             hwnd: HWND::default(),
-            events: events,
-        }
+            events: match events {
+                Some(events) => Some(events.clone()),
+                None => None,
+            },
+            id: match id {
+                None => 0,
+                Some(id) => id,
+            },
+        });
+
+        window.register();
+
+        window.create_window(title, visible, window.id, WS_OVERLAPPEDWINDOW, None);
+
+        window
     }
 
     fn register(&mut self) {
@@ -77,14 +105,12 @@ impl Window {
 
     fn create_window(
         &mut self,
-        id: usize,
         title: &str,
         visible: bool,
+        id: usize,
         style: WINDOW_STYLE,
         parent: Option<HWND>,
     ) -> HWND {
-        self.register();
-
         unsafe {
             CreateWindowExW(
                 WINDOW_EX_STYLE(0),
@@ -115,9 +141,38 @@ impl Window {
         }
     }
 
-    pub fn create(window: &mut Self, title: &str) -> HWND {
-        window.create_window(0, title, true, WS_OVERLAPPEDWINDOW, None)
+    fn load_icon() -> HICON {
+        match unsafe {
+            LoadImageW(
+                module_handle(),
+                PCWSTR(1 as _),
+                IMAGE_ICON,
+                0,
+                0,
+                LR_DEFAULTCOLOR | LR_DEFAULTSIZE | LR_SHARED,
+            )
+        } {
+            Ok(handle) => HICON(handle.0),
+            Err(_) => unsafe {
+                HICON(
+                    LoadImageW(
+                        None,
+                        IDI_APPLICATION,
+                        IMAGE_ICON,
+                        0,
+                        0,
+                        LR_DEFAULTCOLOR | LR_DEFAULTSIZE | LR_SHARED,
+                    )
+                    .unwrap()
+                    .0,
+                )
+            },
+        }
     }
+
+    // pub fn create(window: &mut Self, title: &str) -> HWND {
+    //     window.create_window(0, title, true, WS_OVERLAPPEDWINDOW, None)
+    // }
 
     // pub fn create_hidden(window: &mut Self, title: &str) -> HWND {
     //     window.create_window(0, title, false, WS_OVERLAPPEDWINDOW, None)
@@ -150,10 +205,6 @@ impl Window {
         unsafe { SetWindowLongPtrW(hwnd, WINDOW_LONG_PTR_INDEX(0), 0) };
     }
 
-    // pub fn as_ptr(&mut self) -> *mut Self {
-    //     self as *mut Self
-    // }
-
     pub fn default_procedure(event: WindowEvent) -> LRESULT {
         unsafe { DefWindowProcW(event.hwnd, event.msg, event.wparam, event.lparam) }
     }
@@ -168,8 +219,6 @@ impl Window {
 
         if msg == WM_CREATE {
             if let Some(window) = Self::set_instance(hwnd, lparam) {
-                // event.window = Some(window);
-
                 if let Some(events) = unsafe { &window.as_ref().events } {
                     events(window, event);
                 }
@@ -198,6 +247,40 @@ impl Window {
     }
 }
 
+impl Drop for Window {
+    fn drop(&mut self) {
+        unsafe {
+            let _ = DestroyWindow(self.hwnd);
+        }
+    }
+}
+
+impl Hash for Window {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.hwnd.0.hash(state);
+    }
+}
+
+impl PartialEq for Window {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+    }
+}
+
+impl Eq for Window {}
+
+impl PartialOrd for Window {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Window {
+    fn cmp(&self, other: &Self) -> Ordering {
+        (self.id).cmp(&other.id)
+    }
+}
+
 pub fn message_box(caption: &str, text: &str) -> MESSAGEBOX_RESULT {
     unsafe { MessageBoxW(None, &HSTRING::from(text), &HSTRING::from(caption), MB_OK) }
 }
@@ -206,50 +289,6 @@ pub fn log(message: &str) {
     unsafe {
         OutputDebugStringW(&HSTRING::from(format!("{}\n", message)));
     };
-}
-
-pub fn get_instance() -> HMODULE {
-    let mut module = HMODULE::default();
-
-    unsafe {
-        GetModuleHandleExW(
-            GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT | GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
-            PCWSTR(get_instance as *const u16),
-            &mut module,
-        )
-        .unwrap();
-    }
-
-    return module;
-}
-
-pub fn load_icon() -> HICON {
-    match unsafe {
-        LoadImageW(
-            get_instance(),
-            PCWSTR(1 as _),
-            IMAGE_ICON,
-            0,
-            0,
-            LR_DEFAULTCOLOR | LR_DEFAULTSIZE | LR_SHARED,
-        )
-    } {
-        Ok(handle) => HICON(handle.0),
-        Err(_) => unsafe {
-            HICON(
-                LoadImageW(
-                    None,
-                    IDI_APPLICATION,
-                    IMAGE_ICON,
-                    0,
-                    0,
-                    LR_DEFAULTCOLOR | LR_DEFAULTSIZE | LR_SHARED,
-                )
-                .unwrap()
-                .0,
-            )
-        },
-    }
 }
 
 pub fn is_dark_mode() -> bool {
@@ -262,8 +301,19 @@ pub fn is_dark_mode() -> bool {
         < (8i32 * 128i32)
 }
 
-pub fn quit(exit_code: i32) {
-    unsafe { PostQuitMessage(exit_code) };
+pub fn module_handle() -> HMODULE {
+    let mut module = HMODULE::default();
+
+    unsafe {
+        GetModuleHandleExW(
+            GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT | GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+            PCWSTR(module_handle as *const u16),
+            &mut module,
+        )
+        .unwrap();
+    }
+
+    return module;
 }
 
 pub fn message_loop() -> ExitCode {
@@ -278,4 +328,8 @@ pub fn message_loop() -> ExitCode {
     }
 
     ExitCode::from(u8::try_from(msg.wParam.0).unwrap())
+}
+
+pub fn quit(exit_code: i32) {
+    unsafe { PostQuitMessage(exit_code) };
 }
