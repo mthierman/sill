@@ -1,3 +1,4 @@
 [alias]
+sill = "run --package sill --"
 xtask = "run --package xtask --"
 ex = "run --example"

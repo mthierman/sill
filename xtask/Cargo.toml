@@ -5,7 +5,7 @@ edition = "2021"
 publish = false
 
 [dependencies]
-sill = { path = "../" }
+sill = { path = "../sill" }
 
 [build-dependencies]
 tools = { path = "../tools" }
