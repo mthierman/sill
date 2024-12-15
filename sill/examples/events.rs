@@ -1,7 +1,7 @@
 // #![windows_subsystem = "windows"]
 
 use sill::{
-    app::{message_loop, quit},
+    message_loop, quit,
     window::{default_procedure, event, WindowBuilder, WindowEventHandler},
 };
 use std::{process::ExitCode, rc::Rc};

@@ -1,6 +1,6 @@
 // #![windows_subsystem = "windows"]
 
-use sill::{app::message_loop, window::WindowBuilder};
+use sill::{message_loop, window::WindowBuilder};
 use std::process::ExitCode;
 use windows::Win32::UI::WindowsAndMessaging::WS_OVERLAPPEDWINDOW;
 
