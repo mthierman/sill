@@ -1,5 +1,5 @@
 mod app;
 pub use app::*;
-
-pub mod macros;
+mod macros;
+pub use macros::*;
 pub mod window;

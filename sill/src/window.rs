@@ -1,6 +1,6 @@
 mod builder;
-pub mod event;
 pub use builder::*;
+pub mod event;
 
 use crate::app;
 use std::{
