@@ -1,4 +1,4 @@
-use crate::window::{Window, WindowAttributes, WindowEventHandler};
+use super::{Window, WindowAttributes, WindowEventHandler};
 use windows::Win32::{
     Foundation::HWND,
     UI::WindowsAndMessaging::{WINDOW_EX_STYLE, WINDOW_STYLE},

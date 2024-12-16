@@ -1,5 +1,6 @@
 pub mod keydown {
-    use crate::{macros, window::WindowEvent};
+    use super::super::super::macros;
+    use super::super::WindowEvent;
     use std::char::from_u32;
     use windows::Win32::UI::Input::KeyboardAndMouse::{GetKeyState, VIRTUAL_KEY};
 
