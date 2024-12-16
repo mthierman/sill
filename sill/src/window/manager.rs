@@ -51,15 +51,15 @@ impl WindowManager {
         self
     }
 
-    pub fn build(&self) -> Box<Window> {
+    pub fn add(&self) -> Box<Window> {
         self.builder.build()
     }
 
-    pub fn build_child(&self, parent: HWND) -> Box<Window> {
+    pub fn add_child(&self, parent: HWND) -> Box<Window> {
         self.builder.build_child(parent)
     }
 
-    pub fn build_message_only(&self) -> Box<Window> {
+    pub fn add_message_only(&self) -> Box<Window> {
         self.builder.build_message_only()
     }
 }
