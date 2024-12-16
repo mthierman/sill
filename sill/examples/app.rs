@@ -68,8 +68,8 @@ fn main() -> ExitCode {
         .style(WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN)
         .events(events);
 
-    let _window1 = builder.create();
-    let _window2 = builder.create();
+    let _window1 = builder.build();
+    let _window2 = builder.build();
 
     message_loop()
 }

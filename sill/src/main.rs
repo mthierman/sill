@@ -28,7 +28,7 @@ fn main() -> ExitCode {
         .title("sill")
         .style(WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN)
         .events(events)
-        .create();
+        .build();
 
     message_loop()
 }

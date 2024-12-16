@@ -51,7 +51,7 @@ impl WindowBuilder {
         self
     }
 
-    pub fn create(&self) -> Box<Window> {
+    pub fn build(&self) -> Box<Window> {
         let mut window = Box::new(Window::new());
         window.attributes = self.attributes.clone();
         window.events = self.events.clone();
@@ -59,7 +59,7 @@ impl WindowBuilder {
         window.register().create()
     }
 
-    pub fn create_child(&self, parent: HWND) -> Box<Window> {
+    pub fn build_child(&self, parent: HWND) -> Box<Window> {
         let mut window = Box::new(Window::new());
         window.attributes = self.attributes.clone();
         window.events = self.events.clone();
@@ -67,7 +67,7 @@ impl WindowBuilder {
         window.register().create_child(parent)
     }
 
-    pub fn create_message_only(&self) -> Box<Window> {
+    pub fn build_message_only(&self) -> Box<Window> {
         let mut window = Box::new(Window::new());
         window.attributes = self.attributes.clone();
         window.events = self.events.clone();
