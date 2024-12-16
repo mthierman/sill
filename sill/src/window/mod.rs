@@ -255,9 +255,7 @@ impl Window {
     }
 
     fn get_instance(hwnd: HWND) -> Option<NonNull<Self>> {
-        let window = unsafe { GetWindowLongPtrW(hwnd, WINDOW_LONG_PTR_INDEX(0)) as *mut Self };
-
-        NonNull::new(window)
+        NonNull::new(unsafe { GetWindowLongPtrW(hwnd, WINDOW_LONG_PTR_INDEX(0)) as *mut Self })
     }
 
     fn reset_instance(hwnd: HWND) {
