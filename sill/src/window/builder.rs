@@ -21,25 +21,25 @@ impl WindowBuilder {
     }
 
     pub fn title(mut self, title: &str) -> Self {
-        self.attributes.title = title.to_owned();
+        self.attributes.title = Some(title.to_owned());
 
         self
     }
 
     pub fn id(mut self, id: usize) -> Self {
-        self.attributes.id = id;
+        self.attributes.id = Some(id);
 
         self
     }
 
     pub fn style(mut self, style: WINDOW_STYLE) -> Self {
-        self.attributes.style = style;
+        self.attributes.style = Some(style);
 
         self
     }
 
     pub fn ex_style(mut self, ex_style: WINDOW_EX_STYLE) -> Self {
-        self.attributes.ex_style = ex_style;
+        self.attributes.ex_style = Some(ex_style);
 
         self
     }

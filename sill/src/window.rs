@@ -42,19 +42,19 @@ pub type WindowEventHandler = Rc<dyn Fn(NonNull<Window>, WindowEvent) -> LRESULT
 
 #[derive(Clone)]
 pub struct WindowAttributes {
-    pub title: String,
-    pub id: usize,
-    pub style: WINDOW_STYLE,
-    pub ex_style: WINDOW_EX_STYLE,
+    pub title: Option<String>,
+    pub id: Option<usize>,
+    pub style: Option<WINDOW_STYLE>,
+    pub ex_style: Option<WINDOW_EX_STYLE>,
 }
 
 impl Default for WindowAttributes {
     fn default() -> Self {
         Self {
-            title: String::new(),
-            id: 0,
-            style: WINDOW_STYLE::default(),
-            ex_style: WINDOW_EX_STYLE::default(),
+            title: None,
+            id: None,
+            style: None,
+            ex_style: None,
         }
     }
 }
@@ -114,15 +114,22 @@ impl Window {
 
         unsafe {
             let _hwnd = CreateWindowExW(
-                window.attributes.ex_style,
+                match window.attributes.ex_style {
+                    None => WINDOW_EX_STYLE::default(),
+                    Some(ex_style) => ex_style,
+                },
                 window.class.lpszClassName,
-                PCWSTR(HSTRING::from(&window.attributes.title).as_ptr()),
-                window.attributes.style
-                    | WS_CLIPCHILDREN
-                    | match show {
-                        true => WS_VISIBLE,
-                        false => WINDOW_STYLE::default(),
-                    },
+                match &window.attributes.title {
+                    None => PCWSTR::null(),
+                    Some(title) => PCWSTR(HSTRING::from(title).as_ptr()),
+                },
+                match window.attributes.style {
+                    None => WINDOW_STYLE::default(),
+                    Some(style) => style,
+                } | match show {
+                    true => WS_VISIBLE,
+                    false => WINDOW_STYLE::default(),
+                },
                 CW_USEDEFAULT,
                 CW_USEDEFAULT,
                 CW_USEDEFAULT,
@@ -143,21 +150,31 @@ impl Window {
 
         unsafe {
             let _hwnd = CreateWindowExW(
-                window.attributes.ex_style,
+                match window.attributes.ex_style {
+                    None => WINDOW_EX_STYLE::default(),
+                    Some(ex_style) => ex_style,
+                },
                 window.class.lpszClassName,
-                PCWSTR(HSTRING::from(&window.attributes.title).as_ptr()),
-                window.attributes.style
-                    | WS_CLIPSIBLINGS
-                    | match show {
-                        true => WS_VISIBLE,
-                        false => WINDOW_STYLE::default(),
-                    },
+                match &window.attributes.title {
+                    None => PCWSTR::null(),
+                    Some(title) => PCWSTR(HSTRING::from(title).as_ptr()),
+                },
+                match window.attributes.style {
+                    None => WINDOW_STYLE::default(),
+                    Some(style) => style,
+                } | match show {
+                    true => WS_VISIBLE,
+                    false => WINDOW_STYLE::default(),
+                },
                 CW_USEDEFAULT,
                 CW_USEDEFAULT,
                 CW_USEDEFAULT,
                 CW_USEDEFAULT,
                 parent,
-                HMENU((window.attributes.id) as *mut c_void),
+                match window.attributes.id {
+                    None => HMENU::default(),
+                    Some(id) => HMENU((id) as *mut c_void),
+                },
                 window.class.hInstance,
                 Some(window.borrow_mut() as *mut Self as _),
             )
@@ -172,10 +189,13 @@ impl Window {
 
         unsafe {
             let _hwnd = CreateWindowExW(
-                window.attributes.ex_style,
+                WINDOW_EX_STYLE::default(),
                 window.class.lpszClassName,
-                PCWSTR(HSTRING::from(&window.attributes.title).as_ptr()),
-                window.attributes.style,
+                match &window.attributes.title {
+                    None => PCWSTR::null(),
+                    Some(title) => PCWSTR(HSTRING::from(title).as_ptr()),
+                },
+                WINDOW_STYLE::default(),
                 CW_USEDEFAULT,
                 CW_USEDEFAULT,
                 CW_USEDEFAULT,
