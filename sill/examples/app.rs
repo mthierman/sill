@@ -26,8 +26,7 @@ fn main() -> ExitCode {
         _ => default_window_procedure(event),
     });
 
-    let app = Window::builder().events(app_events).create_message_only();
-
+    let app = Window::builder().events(app_events).build_message_only();
     let app_hwnd = app.hwnd;
 
     let events: WindowEventHandler = Rc::new(move |_window, event| match event.msg {
