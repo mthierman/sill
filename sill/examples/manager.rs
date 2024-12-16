@@ -6,7 +6,7 @@ use std::process::ExitCode;
 fn main() -> ExitCode {
     let manager = Window::manager().title("Test");
 
-    let _window = manager.build();
+    let _window = manager.add();
 
     message_loop()
 }
