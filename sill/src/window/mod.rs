@@ -242,12 +242,8 @@ impl Window {
     }
 
     fn set_instance(hwnd: HWND, lparam: LPARAM) -> Option<NonNull<Self>> {
-        let create_struct = lparam.0 as *const CREATESTRUCTW;
-
-        if create_struct.is_null() {
-            None
-        } else {
-            let window = unsafe { (*create_struct).lpCreateParams as *mut Self };
+        NonNull::new(lparam.0 as *mut CREATESTRUCTW).and_then(|create_struct| {
+            let window = unsafe { create_struct.as_ref().lpCreateParams as *mut Self };
 
             unsafe {
                 SetWindowLongPtrW(hwnd, WINDOW_LONG_PTR_INDEX(0), window as _);
@@ -255,7 +251,7 @@ impl Window {
             }
 
             NonNull::new(window)
-        }
+        })
     }
 
     fn get_instance(hwnd: HWND) -> Option<NonNull<Self>> {
