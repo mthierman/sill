@@ -100,6 +100,10 @@ impl Window {
         WindowBuilder::default()
     }
 
+    pub fn manager() -> WindowManager {
+        WindowManager::default()
+    }
+
     pub fn new() -> Self {
         Default::default()
     }
