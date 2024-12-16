@@ -4,9 +4,9 @@ use sill::{message_loop, Window};
 use std::process::ExitCode;
 
 fn main() -> ExitCode {
-    let manager = Window::manager().title("Test");
+    let mut manager = Window::manager().title("Test");
 
-    let _window = manager.add();
+    let _window = manager.build();
 
     message_loop()
 }

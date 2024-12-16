@@ -54,7 +54,7 @@ impl WindowManager {
         self
     }
 
-    pub fn add(&mut self) -> usize {
+    pub fn build(&mut self) -> usize {
         let window = self.builder.build();
 
         let id = self.map.len() + 1;
@@ -64,7 +64,7 @@ impl WindowManager {
         id
     }
 
-    pub fn add_child(&mut self, parent: HWND) -> usize {
+    pub fn build_child(&mut self, parent: HWND) -> usize {
         let window = self.builder.build_child(parent);
 
         let id = self.map.len() + 1;
@@ -74,7 +74,7 @@ impl WindowManager {
         id
     }
 
-    pub fn add_message_only(&mut self) -> usize {
+    pub fn build_message_only(&mut self) -> usize {
         let window = self.builder.build_message_only();
 
         let id = self.map.len() + 1;
