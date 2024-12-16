@@ -24,12 +24,11 @@ fn main() -> ExitCode {
         _ => default_window_procedure(event),
     });
 
-    let builder = Window::builder()
+    let _window = Window::builder()
         .title("sill")
         .style(WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN)
-        .events(events);
-
-    let _window1 = builder.create();
+        .events(events)
+        .create();
 
     message_loop()
 }

@@ -1,11 +1,13 @@
 use crate::window::{Window, WindowAttributes, WindowEventHandler};
-use windows::Win32::UI::WindowsAndMessaging::{WINDOW_EX_STYLE, WINDOW_STYLE};
+use windows::Win32::{
+    Foundation::HWND,
+    UI::WindowsAndMessaging::{WINDOW_EX_STYLE, WINDOW_STYLE},
+};
 
 #[derive(Default)]
 pub struct WindowBuilder {
     pub attributes: WindowAttributes,
     pub events: Option<WindowEventHandler>,
-    pub hidden: bool,
 }
 
 impl WindowBuilder {
@@ -38,7 +40,7 @@ impl WindowBuilder {
     }
 
     pub fn hidden(mut self) -> Self {
-        self.hidden = true;
+        self.attributes.hidden = true;
 
         self
     }
@@ -50,15 +52,23 @@ impl WindowBuilder {
     }
 
     pub fn create(&self) -> Box<Window> {
-        let mut window = Box::new(Window::default());
+        let mut window = Box::new(Window::new());
         window.attributes = self.attributes.clone();
         window.events = self.events.clone();
 
-        window.register().create(!self.hidden)
+        window.register().create()
+    }
+
+    pub fn create_child(&self, parent: HWND) -> Box<Window> {
+        let mut window = Box::new(Window::new());
+        window.attributes = self.attributes.clone();
+        window.events = self.events.clone();
+
+        window.register().create_child(parent)
     }
 
     pub fn create_message_only(&self) -> Box<Window> {
-        let mut window = Box::new(Window::default());
+        let mut window = Box::new(Window::new());
         window.attributes = self.attributes.clone();
         window.events = self.events.clone();
 

@@ -46,6 +46,7 @@ pub struct WindowAttributes {
     pub id: Option<usize>,
     pub style: Option<WINDOW_STYLE>,
     pub ex_style: Option<WINDOW_EX_STYLE>,
+    pub hidden: bool,
 }
 
 impl Default for WindowAttributes {
@@ -55,6 +56,7 @@ impl Default for WindowAttributes {
             id: None,
             style: Some(WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN),
             ex_style: None,
+            hidden: false,
         }
     }
 }
@@ -97,6 +99,10 @@ impl Window {
         WindowBuilder::default()
     }
 
+    pub fn new() -> Self {
+        Default::default()
+    }
+
     pub fn register(mut self) -> Self {
         if unsafe {
             GetClassInfoExW(
@@ -113,7 +119,7 @@ impl Window {
         self
     }
 
-    pub fn create(self, show: bool) -> Box<Self> {
+    pub fn create(self) -> Box<Self> {
         let mut window = Box::new(self);
 
         unsafe {
@@ -126,9 +132,9 @@ impl Window {
                 },
                 window.attributes.style.unwrap_or_default()
                     | WS_CLIPCHILDREN
-                    | match show {
-                        true => WS_VISIBLE,
-                        false => WINDOW_STYLE::default(),
+                    | match window.attributes.hidden {
+                        false => WS_VISIBLE,
+                        true => WINDOW_STYLE::default(),
                     },
                 CW_USEDEFAULT,
                 CW_USEDEFAULT,
@@ -145,7 +151,7 @@ impl Window {
         window
     }
 
-    pub fn create_child(self, parent: HWND, show: bool) -> Box<Self> {
+    pub fn create_child(self, parent: HWND) -> Box<Self> {
         let mut window = Box::new(self);
 
         unsafe {
@@ -158,9 +164,9 @@ impl Window {
                 },
                 window.attributes.style.unwrap_or_default()
                     | WS_CLIPSIBLINGS
-                    | match show {
-                        true => WS_VISIBLE,
-                        false => WINDOW_STYLE::default(),
+                    | match window.attributes.hidden {
+                        false => WS_VISIBLE,
+                        true => WINDOW_STYLE::default(),
                     },
                 CW_USEDEFAULT,
                 CW_USEDEFAULT,

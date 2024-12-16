@@ -63,11 +63,13 @@ fn main() -> ExitCode {
         _ => default_window_procedure(event),
     });
 
-    let _window = Window::builder()
+    let builder = Window::builder()
         .title("App")
         .style(WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN)
-        .events(events)
-        .create();
+        .events(events);
+
+    let _window1 = builder.create();
+    let _window2 = builder.create();
 
     message_loop()
 }
