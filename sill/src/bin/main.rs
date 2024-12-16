@@ -15,7 +15,7 @@ fn main() -> ExitCode {
         WM_CREATE => {
             println!("WM_CREATE");
 
-            LRESULT(1)
+            LRESULT(0)
         }
         WM_DESTROY => {
             println!("WM_DESTROY");

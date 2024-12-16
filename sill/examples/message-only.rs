@@ -54,7 +54,7 @@ fn main() -> ExitCode {
                 );
             }
 
-            LRESULT(1)
+            LRESULT(0)
         }
         WM_DESTROY => {
             println!("WM_DESTROY");
