@@ -27,12 +27,6 @@ impl WindowManager {
         self
     }
 
-    pub fn id(mut self, id: usize) -> Self {
-        self.builder.attributes.id = Some(id);
-
-        self
-    }
-
     pub fn style(mut self, style: WINDOW_STYLE) -> Self {
         self.builder.attributes.style = Some(style);
 
