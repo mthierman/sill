@@ -4,7 +4,6 @@ pub mod event;
 
 use crate::app;
 use std::{
-    borrow::BorrowMut,
     cmp::Ordering,
     ffi::c_void,
     hash::{Hash, Hasher},
@@ -143,7 +142,7 @@ impl Window {
                 None,
                 None,
                 window.class.hInstance,
-                Some(window.borrow_mut() as *mut Self as _),
+                Some(&mut *window as *mut Self as _),
             )
             .unwrap();
         }
@@ -178,7 +177,7 @@ impl Window {
                     Some(id) => HMENU((id) as *mut c_void),
                 },
                 window.class.hInstance,
-                Some(window.borrow_mut() as *mut Self as _),
+                Some(&mut *window as *mut Self as _),
             )
             .unwrap();
         }
@@ -205,7 +204,7 @@ impl Window {
                 HWND_MESSAGE,
                 None,
                 window.class.hInstance,
-                Some(window.borrow_mut() as *mut Self as _),
+                Some(&mut *window as *mut Self as _),
             )
             .unwrap();
         }
