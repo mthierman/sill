@@ -1,4 +1,7 @@
-use windows::Win32::UI::WindowsAndMessaging::{WINDOW_EX_STYLE, WINDOW_STYLE};
+use windows::Win32::{
+    Foundation::HWND,
+    UI::WindowsAndMessaging::{WINDOW_EX_STYLE, WINDOW_STYLE},
+};
 
 use super::{Window, WindowBuilder, WindowEventHandler};
 
@@ -54,7 +57,15 @@ impl WindowManager {
         self
     }
 
-    pub fn spawn(&self) -> Box<Window> {
+    pub fn build(&self) -> Box<Window> {
         self.builder.build()
+    }
+
+    pub fn build_child(&self, parent: HWND) -> Box<Window> {
+        self.builder.build_child(parent)
+    }
+
+    pub fn build_message_only(&self) -> Box<Window> {
+        self.builder.build_message_only()
     }
 }
