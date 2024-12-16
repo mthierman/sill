@@ -32,10 +32,7 @@ pub fn is_dark_mode() -> bool {
     let ui_settings = UISettings::new().unwrap();
     let bg = ui_settings.GetColorValue(UIColorType::Background).unwrap();
 
-    ((5i32 * i32::try_from(bg.G).unwrap())
-        + (2i32 * i32::try_from(bg.R).unwrap())
-        + i32::try_from(bg.B).unwrap())
-        < (8i32 * 128i32)
+    ((5i32 * i32::from(bg.G)) + (2i32 * i32::from(bg.R)) + i32::from(bg.B)) < (8i32 * 128i32)
 }
 
 pub fn module_handle() -> HMODULE {
@@ -50,7 +47,7 @@ pub fn module_handle() -> HMODULE {
         .unwrap();
     }
 
-    return module;
+    module
 }
 
 pub fn message_loop() -> ExitCode {

@@ -1,18 +1,11 @@
 use crate::window::{Window, WindowAttributes, WindowEventHandler};
 use windows::Win32::UI::WindowsAndMessaging::{WINDOW_EX_STYLE, WINDOW_STYLE};
 
+#[derive(Default)]
 pub struct WindowBuilder {
     pub attributes: WindowAttributes,
     pub events: Option<WindowEventHandler>,
-}
-
-impl Default for WindowBuilder {
-    fn default() -> Self {
-        Self {
-            attributes: WindowAttributes::default(),
-            events: None,
-        }
-    }
+    pub hidden: bool,
 }
 
 impl WindowBuilder {
@@ -44,18 +37,24 @@ impl WindowBuilder {
         self
     }
 
+    pub fn hidden(mut self) -> Self {
+        self.hidden = true;
+
+        self
+    }
+
     pub fn events(mut self, events: WindowEventHandler) -> Self {
         self.events = Some(events.clone());
 
         self
     }
 
-    pub fn create(&self, show: bool) -> Box<Window> {
+    pub fn create(&self) -> Box<Window> {
         let mut window = Box::new(Window::default());
         window.attributes = self.attributes.clone();
         window.events = self.events.clone();
 
-        window.register().create(show)
+        window.register().create(!self.hidden)
     }
 
     pub fn create_message_only(&self) -> Box<Window> {

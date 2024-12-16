@@ -22,7 +22,7 @@ pub fn out_dir() -> PathBuf {
 }
 
 pub fn vswhere() -> PathBuf {
-    PathBuf::from(known_folder(&FOLDERID_ProgramFilesX86, KF_FLAG_DONT_VERIFY))
+    known_folder(&FOLDERID_ProgramFilesX86, KF_FLAG_DONT_VERIFY)
         .join("Microsoft Visual Studio")
         .join("Installer")
         .join("vswhere.exe")

@@ -1,5 +1,3 @@
-use tools;
-
 fn main() {
     println!("cargo::rustc-link-arg-bins=/WX");
 

@@ -1,13 +1,10 @@
 // #![windows_subsystem = "windows"]
 
-use sill::{
-    message_loop, quit,
-    window::{default_procedure, WindowBuilder, WindowEventHandler},
-};
+use sill::{default_window_procedure, message_loop, quit, Window, WindowEventHandler};
 use std::{process::ExitCode, rc::Rc};
 use windows::Win32::{
     Foundation::LRESULT,
-    UI::WindowsAndMessaging::{WM_CREATE, WM_DESTROY, WS_OVERLAPPEDWINDOW},
+    UI::WindowsAndMessaging::{WM_CREATE, WM_DESTROY, WS_CLIPCHILDREN, WS_OVERLAPPEDWINDOW},
 };
 
 fn main() -> ExitCode {
@@ -24,14 +21,15 @@ fn main() -> ExitCode {
 
             LRESULT(0)
         }
-        _ => default_procedure(event),
+        _ => default_window_procedure(event),
     });
 
-    let _window = WindowBuilder::new()
-        .title("Sill")
-        .style(WS_OVERLAPPEDWINDOW)
-        .events(events)
-        .create(true);
+    let builder = Window::builder()
+        .title("sill")
+        .style(WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN)
+        .events(events);
+
+    let _window1 = builder.create();
 
     message_loop()
 }

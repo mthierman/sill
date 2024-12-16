@@ -22,12 +22,12 @@ use windows::{
             CW_USEDEFAULT, HICON, HMENU, HWND_MESSAGE, IDC_ARROW, IDI_APPLICATION, IMAGE_ICON,
             LR_DEFAULTCOLOR, LR_DEFAULTSIZE, LR_SHARED, WINDOW_EX_STYLE, WINDOW_LONG_PTR_INDEX,
             WINDOW_STYLE, WM_CREATE, WM_DESTROY, WNDCLASSEXW, WNDCLASS_STYLES, WS_CLIPCHILDREN,
-            WS_CLIPSIBLINGS, WS_VISIBLE,
+            WS_CLIPSIBLINGS, WS_OVERLAPPEDWINDOW, WS_VISIBLE,
         },
     },
 };
 
-pub fn default_procedure(event: WindowEvent) -> LRESULT {
+pub fn default_window_procedure(event: WindowEvent) -> LRESULT {
     unsafe { DefWindowProcW(event.hwnd, event.msg, event.wparam, event.lparam) }
 }
 
@@ -53,7 +53,7 @@ impl Default for WindowAttributes {
         Self {
             title: None,
             id: None,
-            style: None,
+            style: Some(WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN),
             ex_style: None,
         }
     }
@@ -84,7 +84,7 @@ impl Default for Window {
         };
 
         Self {
-            class: class,
+            class,
             attributes: WindowAttributes::default(),
             hwnd: HWND::default(),
             events: None,
@@ -93,6 +93,10 @@ impl Default for Window {
 }
 
 impl Window {
+    pub fn builder() -> WindowBuilder {
+        WindowBuilder::default()
+    }
+
     pub fn register(mut self) -> Self {
         if unsafe {
             GetClassInfoExW(
@@ -114,22 +118,18 @@ impl Window {
 
         unsafe {
             let _hwnd = CreateWindowExW(
-                match window.attributes.ex_style {
-                    None => WINDOW_EX_STYLE::default(),
-                    Some(ex_style) => ex_style,
-                },
+                window.attributes.ex_style.unwrap_or_default(),
                 window.class.lpszClassName,
                 match &window.attributes.title {
                     None => PCWSTR::null(),
                     Some(title) => PCWSTR(HSTRING::from(title).as_ptr()),
                 },
-                match window.attributes.style {
-                    None => WINDOW_STYLE::default(),
-                    Some(style) => style,
-                } | match show {
-                    true => WS_VISIBLE,
-                    false => WINDOW_STYLE::default(),
-                },
+                window.attributes.style.unwrap_or_default()
+                    | WS_CLIPCHILDREN
+                    | match show {
+                        true => WS_VISIBLE,
+                        false => WINDOW_STYLE::default(),
+                    },
                 CW_USEDEFAULT,
                 CW_USEDEFAULT,
                 CW_USEDEFAULT,
@@ -150,22 +150,18 @@ impl Window {
 
         unsafe {
             let _hwnd = CreateWindowExW(
-                match window.attributes.ex_style {
-                    None => WINDOW_EX_STYLE::default(),
-                    Some(ex_style) => ex_style,
-                },
+                window.attributes.ex_style.unwrap_or_default(),
                 window.class.lpszClassName,
                 match &window.attributes.title {
                     None => PCWSTR::null(),
                     Some(title) => PCWSTR(HSTRING::from(title).as_ptr()),
                 },
-                match window.attributes.style {
-                    None => WINDOW_STYLE::default(),
-                    Some(style) => style,
-                } | match show {
-                    true => WS_VISIBLE,
-                    false => WINDOW_STYLE::default(),
-                },
+                window.attributes.style.unwrap_or_default()
+                    | WS_CLIPSIBLINGS
+                    | match show {
+                        true => WS_VISIBLE,
+                        false => WINDOW_STYLE::default(),
+                    },
                 CW_USEDEFAULT,
                 CW_USEDEFAULT,
                 CW_USEDEFAULT,
@@ -275,33 +271,37 @@ impl Window {
             lparam,
         };
 
-        if msg == WM_CREATE {
-            if let Some(window) = Self::set_instance(hwnd, lparam) {
-                if let Some(events) = unsafe { &window.as_ref().events } {
-                    events(window, event);
+        match msg {
+            WM_CREATE => {
+                if let Some(window) = Self::set_instance(hwnd, lparam) {
+                    if let Some(events) = unsafe { &window.as_ref().events } {
+                        events(window, event);
+                    }
                 }
+
+                LRESULT(0)
             }
-
-            return LRESULT(1);
-        } else if msg == WM_DESTROY {
-            if let Some(window) = Self::get_instance(hwnd) {
-                if let Some(events) = unsafe { &window.as_ref().events } {
-                    events(window, event);
+            WM_DESTROY => {
+                if let Some(window) = Self::get_instance(hwnd) {
+                    if let Some(events) = unsafe { &window.as_ref().events } {
+                        events(window, event);
+                    }
                 }
+
+                Self::reset_instance(hwnd);
+
+                LRESULT(0)
             }
-
-            Self::reset_instance(hwnd);
-
-            return LRESULT(0);
-        } else {
-            if let Some(window) = Window::get_instance(hwnd) {
-                if let Some(events) = unsafe { &window.as_ref().events } {
-                    return events(window, event);
+            _ => {
+                if let Some(window) = Window::get_instance(hwnd) {
+                    if let Some(events) = unsafe { &window.as_ref().events } {
+                        return events(window, event);
+                    }
                 }
+
+                default_window_procedure(event)
             }
         }
-
-        default_procedure(event)
     }
 }
 

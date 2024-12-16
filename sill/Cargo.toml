@@ -1,9 +1,13 @@
 [package]
 name = "sill"
 version = "0.0.0"
+authors = ["Mike Thierman"]
 edition = "2021"
+description = "Windowing library"
+homepage = "https://github.com/mthierman/sill"
+repository = "https://github.com/mthierman/sill"
 publish = false
-default-run = "main"
+default-run = "sill"
 
 [dependencies]
 windows = { workspace = true, features = [
