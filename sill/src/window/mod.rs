@@ -12,19 +12,19 @@ use std::{
     rc::Rc,
 };
 use windows::{
-    core::{w, HSTRING, PCWSTR},
     Win32::{
         Foundation::{HWND, LPARAM, LRESULT, WPARAM},
         Graphics::Gdi::{COLOR_WINDOW, HBRUSH},
         UI::WindowsAndMessaging::{
-            CreateWindowExW, DefWindowProcW, DestroyWindow, GetClassInfoExW, GetWindowLongPtrW,
-            LoadCursorW, LoadImageW, RegisterClassExW, SetWindowLongPtrW, CREATESTRUCTW,
-            CW_USEDEFAULT, HICON, HMENU, HWND_MESSAGE, IDC_ARROW, IDI_APPLICATION, IMAGE_ICON,
-            LR_DEFAULTCOLOR, LR_DEFAULTSIZE, LR_SHARED, WINDOW_EX_STYLE, WINDOW_LONG_PTR_INDEX,
-            WINDOW_STYLE, WM_CREATE, WM_DESTROY, WNDCLASSEXW, WNDCLASS_STYLES, WS_CLIPCHILDREN,
-            WS_CLIPSIBLINGS, WS_OVERLAPPEDWINDOW, WS_VISIBLE,
+            CREATESTRUCTW, CW_USEDEFAULT, CreateWindowExW, DefWindowProcW, DestroyWindow,
+            GetClassInfoExW, GetWindowLongPtrW, HICON, HMENU, HWND_MESSAGE, IDC_ARROW,
+            IDI_APPLICATION, IMAGE_ICON, LR_DEFAULTCOLOR, LR_DEFAULTSIZE, LR_SHARED, LoadCursorW,
+            LoadImageW, RegisterClassExW, SetWindowLongPtrW, WINDOW_EX_STYLE,
+            WINDOW_LONG_PTR_INDEX, WINDOW_STYLE, WM_CREATE, WM_DESTROY, WNDCLASS_STYLES,
+            WNDCLASSEXW, WS_CLIPCHILDREN, WS_CLIPSIBLINGS, WS_OVERLAPPEDWINDOW, WS_VISIBLE,
         },
     },
+    core::{HSTRING, PCWSTR, w},
 };
 
 pub fn default_window_procedure(event: WindowEvent) -> LRESULT {
@@ -279,19 +279,19 @@ impl Window {
 
         match msg {
             WM_CREATE => {
-                if let Some(window) = Self::set_instance(hwnd, lparam) {
-                    if let Some(events) = unsafe { &window.as_ref().events } {
-                        events(window, event);
-                    }
+                if let Some(window) = Self::set_instance(hwnd, lparam)
+                    && let Some(events) = unsafe { &window.as_ref().events }
+                {
+                    events(window, event);
                 }
 
                 LRESULT(0)
             }
             WM_DESTROY => {
-                if let Some(window) = Self::get_instance(hwnd) {
-                    if let Some(events) = unsafe { &window.as_ref().events } {
-                        events(window, event);
-                    }
+                if let Some(window) = Self::get_instance(hwnd)
+                    && let Some(events) = unsafe { &window.as_ref().events }
+                {
+                    events(window, event);
                 }
 
                 Self::reset_instance(hwnd);
@@ -299,10 +299,10 @@ impl Window {
                 LRESULT(0)
             }
             _ => {
-                if let Some(window) = Window::get_instance(hwnd) {
-                    if let Some(events) = unsafe { &window.as_ref().events } {
-                        return events(window, event);
-                    }
+                if let Some(window) = Window::get_instance(hwnd)
+                    && let Some(events) = unsafe { &window.as_ref().events }
+                {
+                    return events(window, event);
                 }
 
                 default_window_procedure(event)
