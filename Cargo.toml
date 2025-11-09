@@ -1,6 +1,6 @@
 [workspace]
-members = ["sill", "xtask", "tools"]
 resolver = "2"
+members = ["sill", "tools", "xtask"]
 
 [workspace.dependencies]
-windows = { version = "0.58.0" }
+windows = { version = "0.62.2" }

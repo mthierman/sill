@@ -106,7 +106,7 @@ impl Window {
     pub fn register(mut self) -> Self {
         if unsafe {
             GetClassInfoExW(
-                self.class.hInstance,
+                Some(self.class.hInstance),
                 self.class.lpszClassName,
                 &mut self.class,
             )
@@ -142,7 +142,7 @@ impl Window {
                 CW_USEDEFAULT,
                 None,
                 None,
-                window.class.hInstance,
+                Some(window.class.hInstance),
                 Some(window.borrow_mut() as *mut Self as _),
             )
             .unwrap();
@@ -172,12 +172,12 @@ impl Window {
                 CW_USEDEFAULT,
                 CW_USEDEFAULT,
                 CW_USEDEFAULT,
-                parent,
+                Some(parent),
                 match window.attributes.id {
-                    None => HMENU::default(),
-                    Some(id) => HMENU((id) as *mut c_void),
+                    None => Some(HMENU::default()),
+                    Some(id) => Some(HMENU((id) as *mut c_void)),
                 },
-                window.class.hInstance,
+                Some(window.class.hInstance),
                 Some(window.borrow_mut() as *mut Self as _),
             )
             .unwrap();
@@ -202,9 +202,9 @@ impl Window {
                 CW_USEDEFAULT,
                 CW_USEDEFAULT,
                 CW_USEDEFAULT,
-                HWND_MESSAGE,
+                Some(HWND_MESSAGE),
                 None,
-                window.class.hInstance,
+                Some(window.class.hInstance),
                 Some(window.borrow_mut() as *mut Self as _),
             )
             .unwrap();
@@ -216,7 +216,7 @@ impl Window {
     fn load_icon() -> HICON {
         match unsafe {
             LoadImageW(
-                app::module_handle(),
+                Some(app::module_handle().into()),
                 PCWSTR(1 as _),
                 IMAGE_ICON,
                 0,

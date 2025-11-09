@@ -35,7 +35,12 @@ fn main() -> ExitCode {
             println!("WM_CREATE");
 
             unsafe {
-                SendMessageW(app_hwnd, WM_NOTIFY, WPARAM::default(), LPARAM::default());
+                SendMessageW(
+                    app_hwnd,
+                    WM_NOTIFY,
+                    Some(WPARAM::default()),
+                    Some(LPARAM::default()),
+                );
             }
 
             LRESULT(0)

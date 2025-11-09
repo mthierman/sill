@@ -1,12 +1,12 @@
 use std::{env, path::PathBuf, process::Command};
 use windows::{
-    core::GUID,
     Win32::{Foundation::HANDLE, UI::Shell::*},
+    core::GUID,
 };
 
 pub fn known_folder(id: &GUID, flag: KNOWN_FOLDER_FLAG) -> PathBuf {
     PathBuf::from(unsafe {
-        SHGetKnownFolderPath(id, flag, HANDLE::default())
+        SHGetKnownFolderPath(id, flag, Some(HANDLE::default()))
             .unwrap()
             .to_string()
             .unwrap()
